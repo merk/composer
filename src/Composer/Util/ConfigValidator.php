@@ -45,11 +45,10 @@ class ConfigValidator
     {
         $errors = array();
         $publishErrors = array();
-        $warnings = array();
 
         // validate json schema
         $laxValid = false;
-        $valid = false;
+        $manifest = array();
         try {
             $json = new JsonFile($file, new RemoteFilesystem($this->io));
             $manifest = $json->read();
@@ -57,7 +56,6 @@ class ConfigValidator
             $json->validateSchema(JsonFile::LAX_SCHEMA);
             $laxValid = true;
             $json->validateSchema();
-            $valid = true;
         } catch (JsonValidationException $e) {
             foreach ($e->getErrors() as $message) {
                 if ($laxValid) {
@@ -69,8 +67,15 @@ class ConfigValidator
         } catch (\Exception $e) {
             $errors[] = $e->getMessage();
 
-            return array($errors, $publishErrors, $warnings);
+            return array($errors, $publishErrors, array());
         }
+
+        return $this->doValidate($manifest, $errors, $publishErrors);
+    }
+
+    protected function doValidate(array $manifest, array $errors, array $publishErrors)
+    {
+        $warnings = array();
 
         // validate actual data
         if (!empty($manifest['license'])) {

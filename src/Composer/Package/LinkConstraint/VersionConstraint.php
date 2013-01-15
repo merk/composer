@@ -44,6 +44,11 @@ class VersionConstraint extends SpecificConstraint
         $this->version = $version;
     }
 
+    public function getOperator()
+    {
+        return $this->operator;
+    }
+
     public function versionCompare($a, $b, $operator)
     {
         if ('dev-' === substr($a, 0, 4) && 'dev-' === substr($b, 0, 4)) {

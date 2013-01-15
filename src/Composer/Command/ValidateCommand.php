@@ -13,8 +13,10 @@
 namespace Composer\Command;
 
 use Composer\Util\ConfigValidator;
+use Composer\Util\ExtendedConfigValidator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -34,7 +36,8 @@ class ValidateCommand extends Command
             ->setName('validate')
             ->setDescription('Validates a composer.json')
             ->setDefinition(array(
-                new InputArgument('file', InputArgument::OPTIONAL, 'path to composer.json file', './composer.json')
+                new InputArgument('file', InputArgument::OPTIONAL, 'path to composer.json file', './composer.json'),
+                new InputOption('extended', 'e', InputOption::VALUE_NONE, 'perform extended validation')
             ))
             ->setHelp(<<<EOT
 The validate command validates a given composer.json
@@ -64,7 +67,7 @@ EOT
             return 1;
         }
 
-        $validator = new ConfigValidator($this->getIO());
+        $validator = $this->getValidator($input->getOption('extended'));
         list($errors, $publishErrors, $warnings) = $validator->validate($file);
 
         // output errors/warnings
@@ -88,10 +91,25 @@ EOT
 
         foreach ($messages as $style => $msgs) {
             foreach ($msgs as $msg) {
-                $output->writeln('<' . $style . '>' . $msg . '</' . $style . '>');
+                $output->writeln('    <' . $style . '>' . $msg . '</' . $style . '>');
             }
         }
 
         return $errors || $publishErrors ? 1 : 0;
+    }
+
+    /**
+     * Retrieves a configuration validator
+     *
+     * @param bool $extended
+     * @return \Composer\Util\ConfigValidator
+     */
+    private function getValidator($extended)
+    {
+        if ($extended) {
+            return new ExtendedConfigValidator($this->getIO(), $this->getComposer(true));
+        }
+
+        return new ConfigValidator($this->getIO());
     }
 }

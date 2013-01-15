@@ -32,6 +32,11 @@ class MultiConstraint implements LinkConstraintInterface
         $this->constraints = $constraints;
     }
 
+    public function getConstraints()
+    {
+        return $this->constraints;
+    }
+
     public function matches(LinkConstraintInterface $provider)
     {
         foreach ($this->constraints as $constraint) {
